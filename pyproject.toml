@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "auto-changelog-release-action"
-version = "1.16.1"
+version = "1.16.2"
 description = "Internal Python package for the auto changelog release action"
 authors = [
     "auto-changelog-release-action maintainers <maintainers@example.invalid>",
