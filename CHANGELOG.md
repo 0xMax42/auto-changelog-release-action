@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.6](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.5..v1.16.6) - 2026-10-03
+
+### 📦 Dependencies
+
+- *(deps)* Update dependency poetry-core to v2.5.0 - ([34b3d00](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/34b3d007ccc347e64fc254620b52757a4b271a75))
+
 ## [1.16.5](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.4..v1.16.5) - 2026-09-30
 
 ### 📦 Dependencies
