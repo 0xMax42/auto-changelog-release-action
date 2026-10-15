@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.16.8](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.7..v1.16.8) - 2026-10-15
+
+### 📦 Dependencies
+
+- *(deps)* Update dependency ruff to v0.16.10 - ([127b34b](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/127b34b1dd3a8c4a5af7f20c567ef1fd9a34bdf3))
+
 ## [1.16.7](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.6..v1.16.7) - 2026-10-08
 
 ### 📦 Dependencies
