@@ -59,6 +59,10 @@ inputs:
     description: "Run git-cliff without fetching remote metadata."
     required: false
     default: "true"
+  commit_unreleased_changelog:
+    description: "Commit and push the generated unreleased changelog on non-release runs."
+    required: false
+    default: "false"
 
   trigger_release_workflows:
     description: >
@@ -102,6 +106,7 @@ runs:
         MINOR_PATTERNS: ${{ inputs.minor_patterns }}
         PATCH_PATTERNS: ${{ inputs.patch_patterns }}
         GIT_CLIFF_OFFLINE: ${{ inputs.git_cliff_offline }}
+        COMMIT_UNRELEASED_CHANGELOG: ${{ inputs.commit_unreleased_changelog }}
         RANGE: ${{ github.event.before }}..${{ inputs.github_sha_override || github.sha || '' }}
         GITHUB_EVENT_BEFORE: ${{ github.event.before || '' }}
         GITHUB_SHA: ${{ inputs.github_sha_override || github.sha || '' }}

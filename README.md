@@ -12,7 +12,7 @@ It is mainly intended for internal use, but the behavior is straightforward: the
 - generates or updates `CHANGELOG.md`
 - creates and publishes a release when a new version is present
 
-If no release is needed, the action updates the unreleased changelog section instead.
+If no release is needed, the action generates the unreleased changelog section locally. By default, it does not commit or push the change.
 
 ## Usage
 
@@ -145,7 +145,19 @@ The action also exposes outputs on the step that runs it via `steps.<id>.outputs
 | `minor_patterns` | no | `""` | Newline-separated regular expressions that trigger a minor version bump. |
 | `patch_patterns` | no | `""` | Newline-separated regular expressions that trigger a patch version bump. |
 | `git_cliff_offline` | no | `"true"` | If `true`, runs `git-cliff` in offline mode and skips remote metadata lookups. |
+| `commit_unreleased_changelog` | no | `"false"` | If `true`, commits and pushes an updated unreleased changelog on non-release runs. Generation is unaffected. |
 | `trigger_release_workflows` | no | `"false"` | On Gitea hosts supporting the trigger_workflows release API option, if `true`, adds `"trigger_workflows": true` to the release API payload. The input has no effect on GitHub. |
+
+### Unreleased changelog commits
+
+By default, non-release runs generate `CHANGELOG.md` locally without committing or pushing it. To restore the previous behavior, explicitly enable:
+
+```yaml
+with:
+  commit_unreleased_changelog: "true"
+```
+
+**Behavior change:** Previous versions always committed and pushed a changed unreleased changelog. This is now opt-in (`false` by default). Release changelog commits and pushes are unaffected.
 
 ## Outputs
 

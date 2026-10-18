@@ -55,7 +55,11 @@ def write_fake_git_cliff(bin_dir: Path) -> None:
 
 
 def run_unreleased_changelog(
-    repo_root: Path, *, github_ref: str, fake_output: str | None = None
+    repo_root: Path,
+    *,
+    github_ref: str,
+    fake_output: str | None = None,
+    commit_unreleased_changelog: bool = False,
 ) -> str:
     action_root = Path(__file__).resolve().parents[2]
     bin_dir = repo_root.parent / "bin"
@@ -74,6 +78,7 @@ def run_unreleased_changelog(
         changelog_file=repo_root / "CHANGELOG.md",
         cliff_config=repo_root / "cliff.toml",
         git_branch=github_ref.removeprefix("refs/heads/"),
+        commit_unreleased_changelog=commit_unreleased_changelog,
     )
 
     buffer = io.StringIO()
@@ -123,6 +128,28 @@ def test_unreleased_changelog_skips_when_missing_off_main_branch(tmp_path: Path)
     assert remote_branch_head(remote_root, "v1/refactor/skip-changelog") == before_head
 
 
+def test_unreleased_changelog_generates_without_committing_by_default(tmp_path: Path) -> None:
+    repo = init_local_git_repo(tmp_path)
+    remote_root = init_local_bare_remote(tmp_path)
+    repo.add_remote("origin", str(remote_root))
+    repo.write("cliff.toml", "test\n")
+    repo.commit_all("chore: initial import")
+    repo.push("origin", "main", set_upstream=True)
+    before_head = repo.rev_parse("HEAD")
+
+    stdout = run_unreleased_changelog(
+        repo.root,
+        github_ref="refs/heads/main",
+        fake_output="# Changelog\n\nGenerated unreleased entry\n",
+    )
+
+    assert "Generating" in stdout
+    assert "commit and push disabled" in stdout
+    assert repo.read("CHANGELOG.md") == "# Changelog\n\nGenerated unreleased entry\n"
+    assert repo.rev_parse("HEAD") == before_head
+    assert remote_branch_head(remote_root, "main") == before_head
+
+
 def test_unreleased_changelog_generates_commits_and_pushes(tmp_path: Path) -> None:
     repo = init_local_git_repo(tmp_path)
     remote_root = init_local_bare_remote(tmp_path)
@@ -135,6 +162,7 @@ def test_unreleased_changelog_generates_commits_and_pushes(tmp_path: Path) -> No
         repo.root,
         github_ref="refs/heads/main",
         fake_output="# Changelog\n\nGenerated unreleased entry\n",
+        commit_unreleased_changelog=True,
     )
 
     assert "Generating" in stdout

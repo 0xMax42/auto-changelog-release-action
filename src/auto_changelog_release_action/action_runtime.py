@@ -58,6 +58,7 @@ class ActionRuntimeConfig:
     github_sha: str
     release_publish_token: str
     trigger_release_workflows: bool = False
+    commit_unreleased_changelog: bool = False
 
 
 def bool_string(value: bool) -> str:
@@ -151,6 +152,9 @@ def config_from_environment() -> ActionRuntimeConfig:
         release_publish_token=os.environ.get("RELEASE_PUBLISH_TOKEN", ""),
         trigger_release_workflows=(
             os.environ.get("TRIGGER_RELEASE_WORKFLOWS", "false").lower() == "true"
+        ),
+        commit_unreleased_changelog=(
+            os.environ.get("COMMIT_UNRELEASED_CHANGELOG", "false").lower() == "true"
         ),
     )
 
@@ -263,6 +267,7 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
                 changelog_file=Path("CHANGELOG.md"),
                 cliff_config=Path(DEFAULT_CLIFF_CONFIG),
                 git_branch=config.git_ref.removeprefix("refs/heads/"),
+                commit_unreleased_changelog=config.commit_unreleased_changelog,
             ),
             cwd=Path.cwd(),
         )

@@ -23,6 +23,7 @@ def clear_runtime_environment(monkeypatch) -> None:
         "GITHUB_REF",
         "GITEA_REF",
         "TRIGGER_RELEASE_WORKFLOWS",
+        "COMMIT_UNRELEASED_CHANGELOG",
     ):
         monkeypatch.delenv(name, raising=False)
 
@@ -362,6 +363,31 @@ def test_config_from_environment_reads_git_cliff_offline(monkeypatch, tmp_path: 
     assert config.git_cliff_offline is True
 
 
+def test_config_from_environment_defaults_unreleased_changelog_commit_to_false(
+    monkeypatch, tmp_path: Path
+) -> None:
+    clear_runtime_environment(monkeypatch)
+    monkeypatch.setenv("GITHUB_ACTION_PATH", str(tmp_path))
+    monkeypatch.setenv("RANGE", "before..after")
+
+    config = action_runtime.config_from_environment()
+
+    assert config.commit_unreleased_changelog is False
+
+
+def test_config_from_environment_allows_unreleased_changelog_commits(
+    monkeypatch, tmp_path: Path
+) -> None:
+    clear_runtime_environment(monkeypatch)
+    monkeypatch.setenv("GITHUB_ACTION_PATH", str(tmp_path))
+    monkeypatch.setenv("RANGE", "before..after")
+    monkeypatch.setenv("COMMIT_UNRELEASED_CHANGELOG", "true")
+
+    config = action_runtime.config_from_environment()
+
+    assert config.commit_unreleased_changelog is True
+
+
 def test_config_from_environment_reads_trigger_release_workflows(
     monkeypatch, tmp_path: Path
 ) -> None:
@@ -392,7 +418,7 @@ def test_config_from_environment_defaults_git_cliff_offline_to_true(
 
 
 def test_run_action_runtime_sets_git_cliff_offline_env(monkeypatch, tmp_path: Path) -> None:
-    captured: dict[str, str | None] = {}
+    captured: dict[str, str | bool | None] = {}
     config = action_runtime.ActionRuntimeConfig(
         action_path=tmp_path,
         host=RuntimeHost.GITEA,
@@ -440,8 +466,9 @@ def test_run_action_runtime_sets_git_cliff_offline_env(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(action_runtime, "ensure_cliff_config", lambda *_args, **_kwargs: False)
     monkeypatch.setattr(action_runtime, "install_git_cliff", lambda *_args, **_kwargs: "2.10.1")
 
-    def fake_run_unreleased_changelog_flow(*_args, **_kwargs) -> None:
+    def fake_run_unreleased_changelog_flow(unreleased_config, *, cwd: Path) -> None:
         captured["offline"] = action_runtime.os.environ.get("GIT_CLIFF_OFFLINE")
+        captured["commit_unreleased_changelog"] = unreleased_config.commit_unreleased_changelog
 
     monkeypatch.setattr(
         action_runtime,
@@ -451,7 +478,7 @@ def test_run_action_runtime_sets_git_cliff_offline_env(monkeypatch, tmp_path: Pa
 
     action_runtime.run_action_runtime(config)
 
-    assert captured == {"offline": "true"}
+    assert captured == {"offline": "true", "commit_unreleased_changelog": False}
     assert action_runtime.os.environ.get("GIT_CLIFF_OFFLINE") is None
 
 

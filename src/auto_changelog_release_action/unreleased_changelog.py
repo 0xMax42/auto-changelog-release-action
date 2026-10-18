@@ -20,6 +20,7 @@ class UnreleasedChangelogConfig:
     changelog_file: Path
     cliff_config: Path
     git_branch: str
+    commit_unreleased_changelog: bool = False
 
 
 @dataclass(frozen=True)
@@ -108,6 +109,10 @@ def run_unreleased_changelog_flow(
         return UnreleasedChangelogResult(generated=False, committed=False)
 
     generate_unreleased_changelog(config, cwd=cwd)
+    if not config.commit_unreleased_changelog:
+        print("ℹ️  Unreleased changelog commit and push disabled.")
+        return UnreleasedChangelogResult(generated=True, committed=False)
+
     committed = commit_and_push_changelog(config, cwd=cwd)
     return UnreleasedChangelogResult(generated=True, committed=committed)
 
