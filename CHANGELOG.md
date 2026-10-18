@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.0](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.9..v1.17.0) - 2026-10-18
+
+### 🚀 Features
+
+- [**breaking**] Make unreleased changelog commits opt-in - ([043eb82](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/043eb82233b9d904dd9d4b60c975dda7d9cf488b))
+
+### 🧪 Testing
+
+- Enable unreleased changelog commits in Podman smoke test - ([e590662](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/e5906628b1c2c5f7684d1c842f704edddfe19508))
+
 ## [1.16.9](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.8..v1.16.9) - 2026-10-15
 
 ### 📦 Dependencies
