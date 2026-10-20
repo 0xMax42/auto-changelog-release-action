@@ -42,6 +42,9 @@ body = """
 {% else %}\
     ## [unreleased]
 {% endif %}\
+{% if version and commits | length == 0 %}\
+    \nMaintenance release. No user-facing changes.
+{% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     {% if group | striptags | trim == "📝 Release Notes" %}\
         {% set_global release_notes = "" %}\

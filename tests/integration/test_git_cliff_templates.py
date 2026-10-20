@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 
+from auto_changelog_release_action import release_flow
 from auto_changelog_release_action.cliff_config import ensure_cliff_config
 from auto_changelog_release_action.release_flow import ReleaseConfig, generate_release_changelog
 from auto_changelog_release_action.runtime_host import RuntimeHost
@@ -98,6 +99,7 @@ def test_git_cliff_template(
         context.setenv("PATH", f"{wrapped_bin}{os.pathsep}{os.environ.get('PATH', '')}")
         context.setenv("GIT_CLIFF_OFFLINE", "true")
         context.setenv("TZ", "UTC")
+        context.setattr(release_flow, "release_timestamp", lambda: 1768500000)
         if case["mode"] == "release":
             # The action renders the changelog before committing it and creating its tag.
             target_tag = f"v{case['version']}"

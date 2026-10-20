@@ -244,6 +244,39 @@ def augment_context_entries(
     return entries
 
 
+def ensure_target_release_entry(
+    context_json: str, *, tag: str, commit_id: str, timestamp: int, repository: str
+) -> str:
+    """Add a missing release when git-cliff drops all its skipped commits."""
+    entries = json.loads(context_json)
+    if any(isinstance(entry, dict) and entry.get("version") == tag for entry in entries):
+        return context_json
+
+    previous = entries[0] if entries else None
+    release: JsonDict = {
+        "version": tag,
+        "message": None,
+        "commits": [],
+        "commit_id": commit_id,
+        "timestamp": timestamp,
+        "previous": previous,
+        "repository": repository,
+        "commit_range": None,
+        "submodule_commits": {},
+        "statistics": None,
+        "extra": None,
+        "bump_type": None,
+        "github": {"contributors": []},
+        "gitlab": {"contributors": []},
+        "gitea": {"contributors": []},
+        "bitbucket": {"contributors": []},
+        "azure_devops": {"contributors": []},
+    }
+    flag_pre_release(release)
+    entries.insert(0, release)
+    return json.dumps(entries, indent=4)
+
+
 def augment_context_json(
     context_json: str,
     *,

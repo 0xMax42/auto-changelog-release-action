@@ -1,16 +1,63 @@
 from __future__ import annotations
 
+import json
+
 from auto_changelog_release_action.changelog_context import (
     PRE_RELEASE_LABELS,
-    augment_context_json,
     augment_context_entries,
+    augment_context_json,
     augment_merge_commits,
     collect_prerelease_commits,
+    ensure_target_release_entry,
     extract_type,
     flag_pre_release,
     inject_prerelease_commits,
     parse_version_parts,
 )
+
+
+def test_ensure_target_release_entry_adds_missing_maintenance_release() -> None:
+    context = '[{"version":"v1.0.0","commits":[]}]'
+    result = ensure_target_release_entry(
+        context,
+        tag="v1.0.1",
+        commit_id="release-commit",
+        timestamp=1768500000,
+        repository="/repo",
+    )
+    entries = json.loads(result)
+    assert [entry["version"] for entry in entries] == ["v1.0.1", "v1.0.0"]
+    assert entries[0]["commits"] == []
+    assert entries[0]["previous"]["version"] == "v1.0.0"
+    assert entries[0]["timestamp"] == 1768500000
+    assert entries[0]["commit_id"] == "release-commit"
+
+
+def test_ensure_target_release_entry_preserves_prerelease_marker() -> None:
+    result = ensure_target_release_entry(
+        "[]",
+        tag="v1.0.1-pre.1",
+        commit_id="release-commit",
+        timestamp=1768500000,
+        repository="/repo",
+    )
+    entry = json.loads(result)[0]
+    assert entry["extra"]["pre_release"] is True
+    assert entry["previous"] is None
+
+
+def test_ensure_target_release_entry_preserves_existing_release() -> None:
+    context = '[{"version":"v1.0.1","commits":[{"id":"real"}]}]'
+    assert (
+        ensure_target_release_entry(
+            context,
+            tag="v1.0.1",
+            commit_id="ignored",
+            timestamp=1768500000,
+            repository="/repo",
+        )
+        == context
+    )
 
 
 def test_extract_type_reads_conventional_commit_type() -> None:

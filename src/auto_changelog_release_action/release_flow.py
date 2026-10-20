@@ -13,8 +13,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
-from auto_changelog_release_action.changelog_context import augment_context_json
-from auto_changelog_release_action.process_utils import run_command, run_git
+from auto_changelog_release_action.changelog_context import (
+    augment_context_json,
+    ensure_target_release_entry,
+)
+from auto_changelog_release_action.process_utils import run_command, run_git, run_git_stdout
 from auto_changelog_release_action.runtime_host import RuntimeHost
 from auto_changelog_release_action.versioning import PRE_RELEASE_LABELS, parse_version
 
@@ -57,6 +60,11 @@ def is_configured_prerelease_version(version: str) -> bool:
     return bool(parsed.label and parsed.label in PRE_RELEASE_LABELS and parsed.suffix)
 
 
+def release_timestamp() -> int:
+    """Return the timestamp for a release missing from the git-cliff context."""
+    return int(time.time())
+
+
 def generate_release_changelog(config: ReleaseConfig, *, cwd: Path) -> None:
     """Render the release changelog for the target tag."""
 
@@ -68,6 +76,18 @@ def generate_release_changelog(config: ReleaseConfig, *, cwd: Path) -> None:
         cwd=cwd,
     )
     augmented_context = augment_context_json(context.stdout)
+    if not any(
+        entry.get("version") == tag_name
+        for entry in json.loads(augmented_context)
+        if isinstance(entry, dict)
+    ):
+        augmented_context = ensure_target_release_entry(
+            augmented_context,
+            tag=tag_name,
+            commit_id=run_git_stdout(["rev-parse", "HEAD"], cwd=cwd),
+            timestamp=release_timestamp(),
+            repository=str(cwd),
+        )
     run_command(
         [
             "git-cliff",
