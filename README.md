@@ -287,10 +287,14 @@ poetry run task typecheck
 ```
 
 `test-podman` requires Podman and enables the existing Podman-specific tests.
-Golden-file tests require Git, `faketime`, and Linux x86_64. The relevant Taskipy
-commands automatically download the official git-cliff 2.14.2 release into
-`.cache/tools/git-cliff/` on first use. Later runs reuse the cached binary and
-work offline. System-installed git-cliff binaries are not used by the golden tests.
+The action and its golden-file tests share the version pinned in the action's
+`versions.gitcliff.env` (updated by Renovate). The action reads it from its own
+checkout, not from the caller's `cliff.toml`; any old `CLIFF_VERSION` comment is
+ignored. Golden-file tests require Git, `faketime`, and Linux x86_64. The relevant
+Taskipy commands automatically download the pinned official git-cliff release
+into `.cache/tools/git-cliff/` on first use. Later runs
+reuse the cached binary and work offline. System-installed git-cliff binaries
+are not used by the golden tests.
 `goldens-update` regenerates the expected Markdown files; review them with
 `git diff -- tests/integration/git_cliff_cases/`.
 

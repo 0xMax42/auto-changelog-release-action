@@ -1,4 +1,5 @@
 **/*.env
+!versions.gitcliff.env
 .coverage
 .cache/
 __pycache__/

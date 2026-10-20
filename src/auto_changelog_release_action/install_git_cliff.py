@@ -15,7 +15,6 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-DEFAULT_GIT_CLIFF_VERSION = "latest"
 DEFAULT_ARCH_OS = "x86_64-unknown-linux-gnu"
 DEFAULT_INSTALL_DIR = "/usr/local/bin"
 REPO = "orhun/git-cliff"
@@ -25,8 +24,6 @@ VERSION_PATTERN = re.compile(r"^git-cliff\s+(\S+)$")
 def resolve_release_url(version: str) -> str:
     """Build the GitHub API URL for the requested git-cliff version."""
 
-    if version == "latest":
-        return f"https://api.github.com/repos/{REPO}/releases/latest"
     return f"https://api.github.com/repos/{REPO}/releases/tags/v{version}"
 
 
@@ -135,22 +132,24 @@ def install_binary(source_path: Path, install_dir: Path) -> None:
 
 
 def install_git_cliff(
-    version: str | None,
+    version: str,
     *,
     arch_os: str = DEFAULT_ARCH_OS,
     install_dir: str = DEFAULT_INSTALL_DIR,
-) -> str:
-    """Install the requested git-cliff version and return the installed version string."""
+) -> Path:
+    """Return the executable path for the requested git-cliff version."""
 
-    requested_version = version or DEFAULT_GIT_CLIFF_VERSION
+    if not version:
+        raise ValueError("An explicit git-cliff version is required")
+
     existing_binary = shutil.which("git-cliff")
     if existing_binary:
         existing_version = get_git_cliff_version(existing_binary)
-        if requested_version == DEFAULT_GIT_CLIFF_VERSION or existing_version == requested_version:
+        if existing_version == version:
             print(f"✅ Using existing git-cliff {existing_version} at {existing_binary}")
-            return existing_version
+            return Path(existing_binary).resolve()
 
-    release_info = fetch_release_info(requested_version)
+    release_info = fetch_release_info(version)
     resolved_version = str(release_info["tag_name"])
     asset_url = select_asset_url(release_info, arch_os)
     asset_name = asset_url.rsplit("/", 1)[-1]
@@ -166,5 +165,7 @@ def install_git_cliff(
 
     installed_binary = Path(install_dir) / "git-cliff"
     installed_version = get_git_cliff_version(installed_binary)
+    if installed_version != version:
+        raise RuntimeError(f"Expected git-cliff {version}, got {installed_version}")
     print(f"✅ git-cliff {installed_version} installed in {install_dir}")
-    return installed_version
+    return installed_binary.resolve()

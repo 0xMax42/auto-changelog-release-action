@@ -38,6 +38,7 @@ class ReleaseConfig:
     publish_token: str
     host: RuntimeHost = RuntimeHost("github")
     trigger_release_workflows: bool = False
+    git_cliff_binary: str = "git-cliff"
 
 
 @dataclass(frozen=True)
@@ -72,7 +73,7 @@ def generate_release_changelog(config: ReleaseConfig, *, cwd: Path) -> None:
     print(f"📄 Generating changelog for tag {tag_name}")
 
     context = run_command(
-        ["git-cliff", "-c", str(config.cliff_config), "-t", tag_name, "--context"],
+        [config.git_cliff_binary, "-c", str(config.cliff_config), "-t", tag_name, "--context"],
         cwd=cwd,
     )
     augmented_context = augment_context_json(context.stdout)
@@ -90,7 +91,7 @@ def generate_release_changelog(config: ReleaseConfig, *, cwd: Path) -> None:
         )
     run_command(
         [
-            "git-cliff",
+            config.git_cliff_binary,
             "-c",
             str(config.cliff_config),
             "-t",

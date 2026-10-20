@@ -18,8 +18,8 @@ It targets both Gitea and GitHub runtimes through one centralized host-resolutio
 4. `version_bump_flow.py` checks commit messages and may bump the version file.
 5. If no bump happened, `version_change_flow.py` compares the version value across commits.
 6. `runtime_host.py` is the single source of truth for host detection and URL normalization.
-7. `cliff_config.py` reads `CLIFF_VERSION` and creates `cliff.toml` from the host-specific bundled template when needed.
-8. `install_git_cliff.py` downloads and installs the required `git-cliff` binary.
+7. `cliff_config.py` creates `cliff.toml` from the host-specific bundled template when needed.
+8. `git_cliff_version.py` reads the Renovate-managed `versions.gitcliff.env` from the action's own checkout; `install_git_cliff.py` installs that pinned version.
 9. `release_flow.py` runs when the version changed and handles release changelog generation, changelog commit, tag creation, and API release publication.
 10. `unreleased_changelog.py` runs when no release is needed and updates the unreleased changelog instead.
 

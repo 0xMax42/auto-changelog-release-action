@@ -1,4 +1,4 @@
-"""Reads git-cliff versions and materializes cliff.toml from the bundled template."""
+"""Materialize cliff.toml from the bundled host-aware template."""
 
 from __future__ import annotations
 
@@ -7,28 +7,8 @@ from pathlib import Path
 from auto_changelog_release_action.repository import split_repository_slug
 from auto_changelog_release_action.runtime_host import RuntimeHost
 
-CLIFF_VERSION_PREFIX = "# CLIFF_VERSION="
 DEFAULT_CLIFF_CONFIG = "cliff.toml"
 CLIFF_TEMPLATE_NAME = "cliff.toml.template"
-
-
-def extract_cliff_version(text: str) -> str | None:
-    """Extract the optional CLIFF_VERSION marker from a cliff config file."""
-
-    for line in text.splitlines():
-        if not line.startswith(CLIFF_VERSION_PREFIX):
-            continue
-
-        version = line.split("=", 1)[1].replace('"', "").replace(" ", "")
-        return version or None
-
-    return None
-
-
-def read_cliff_version(cliff_path: Path) -> str | None:
-    """Read and parse the CLIFF_VERSION marker from disk."""
-
-    return extract_cliff_version(cliff_path.read_text(encoding="utf-8"))
 
 
 def render_cliff_config_template(

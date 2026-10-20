@@ -21,6 +21,7 @@ class UnreleasedChangelogConfig:
     cliff_config: Path
     git_branch: str
     commit_unreleased_changelog: bool = False
+    git_cliff_binary: str = "git-cliff"
 
 
 @dataclass(frozen=True)
@@ -52,13 +53,13 @@ def generate_unreleased_changelog(config: UnreleasedChangelogConfig, *, cwd: Pat
     print(f"📄 Generating {config.changelog_file} using git-cliff...")
 
     context = run_command(
-        ["git-cliff", "-c", str(config.cliff_config), "--context"],
+        [config.git_cliff_binary, "-c", str(config.cliff_config), "--context"],
         cwd=cwd,
     )
     augmented_context = augment_context_json(context.stdout)
     run_command(
         [
-            "git-cliff",
+            config.git_cliff_binary,
             "-c",
             str(config.cliff_config),
             "--from-context",

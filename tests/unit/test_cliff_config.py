@@ -5,23 +5,12 @@ from pathlib import Path
 from auto_changelog_release_action.cliff_config import (
     CLIFF_TEMPLATE_NAME,
     ensure_cliff_config,
-    extract_cliff_version,
     render_cliff_config_template,
     split_repository_slug,
 )
 from auto_changelog_release_action.runtime_host import RuntimeHost
 
 EXAMPLE_GITEA_SERVER_URL = "https://git.example.invalid"
-
-
-def test_extract_cliff_version_reads_comment_value() -> None:
-    text = '# CLIFF_VERSION=2.10.1\n[remote.gitea]\nowner = "actions"\n'
-
-    assert extract_cliff_version(text) == "2.10.1"
-
-
-def test_extract_cliff_version_returns_none_when_comment_missing() -> None:
-    assert extract_cliff_version('[remote.gitea]\nowner = "actions"\n') is None
 
 
 def test_split_repository_slug_matches_shell_behavior() -> None:

@@ -3,5 +3,6 @@
     "extends": [
         "https://git.0xmax42.io/renovate-bot/presets/raw/tag/v0/base.json5",
         "https://git.0xmax42.io/renovate-bot/presets/raw/tag/v0/poetry.json5",
+        "https://git.0xmax42.io/renovate-bot/presets/raw/tag/v0/github.json5",
     ],
 }

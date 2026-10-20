@@ -191,7 +191,7 @@ def run_action_runtime_from_environment(
     monkeypatch.delenv("GITEA_SERVER_URL", raising=False)
     monkeypatch.delenv("GITEA_REPOSITORY", raising=False)
     monkeypatch.delenv("GITEA_REF", raising=False)
-    monkeypatch.setattr(action_runtime, "install_git_cliff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(action_runtime, "install_git_cliff", lambda *_args, **_kwargs: "git-cliff")
     monkeypatch.setattr(action_runtime, "configure_git_author", lambda *_args: None)
 
     buffer = io.StringIO()
@@ -250,7 +250,7 @@ def run_action_runtime_from_gitea_runner_environment(
     monkeypatch.delenv("GITEA_SERVER_URL", raising=False)
     monkeypatch.delenv("GITEA_REPOSITORY", raising=False)
     monkeypatch.delenv("GITEA_REF", raising=False)
-    monkeypatch.setattr(action_runtime, "install_git_cliff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(action_runtime, "install_git_cliff", lambda *_args, **_kwargs: "git-cliff")
     monkeypatch.setattr(action_runtime, "configure_git_author", lambda *_args: None)
 
     config = action_runtime.config_from_environment()

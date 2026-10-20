@@ -94,9 +94,15 @@ def test_git_cliff_template(
 
     # augment_context_json uses Git subprocesses without an explicit cwd.
     wrapped_bin = _frozen_git_cliff_bin(tmp_path, str(executable))
+    # A stale git-cliff earlier in PATH must never override the explicit binary.
+    stale_bin = tmp_path / "stale-bin"
+    stale_bin.mkdir()
+    stale_executable = stale_bin / "git-cliff"
+    stale_executable.write_text("#!/bin/sh\nexit 99\n", encoding="utf-8")
+    stale_executable.chmod(0o755)
     with monkeypatch.context() as context:
         context.chdir(fixture.root)
-        context.setenv("PATH", f"{wrapped_bin}{os.pathsep}{os.environ.get('PATH', '')}")
+        context.setenv("PATH", f"{stale_bin}{os.pathsep}{os.environ.get('PATH', '')}")
         context.setenv("GIT_CLIFF_OFFLINE", "true")
         context.setenv("TZ", "UTC")
         context.setattr(release_flow, "release_timestamp", lambda: 1768500000)
@@ -117,6 +123,7 @@ def test_git_cliff_template(
                     repository_name="changelog-fixture",
                     publish_token="",
                     host=host,
+                    git_cliff_binary=str(wrapped_bin / "git-cliff"),
                 ),
                 cwd=fixture.root,
             )
@@ -126,6 +133,7 @@ def test_git_cliff_template(
                     changelog_file=changelog,
                     cliff_config=cliff_config,
                     git_branch="main",
+                    git_cliff_binary=str(wrapped_bin / "git-cliff"),
                 ),
                 cwd=fixture.root,
             )

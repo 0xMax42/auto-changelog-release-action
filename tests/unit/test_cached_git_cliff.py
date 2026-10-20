@@ -11,6 +11,23 @@ import pytest
 from scripts import ensure_git_cliff as installer
 
 
+def test_read_git_cliff_version(tmp_path: Path) -> None:
+    version_file = tmp_path / "versions.gitcliff.env"
+    version_file.write_text(
+        '# renovate:github-release: packageName=orhun/git-cliff\n'
+        'GIT_CLIFF_VERSION="v2.15.0"\n',
+        encoding="utf-8",
+    )
+    assert installer.read_git_cliff_version(version_file) == "2.15.0"
+
+
+def test_read_git_cliff_version_rejects_invalid_value(tmp_path: Path) -> None:
+    version_file = tmp_path / "versions.gitcliff.env"
+    version_file.write_text('GIT_CLIFF_VERSION="latest"\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="Missing or invalid GIT_CLIFF_VERSION"):
+        installer.read_git_cliff_version(version_file)
+
+
 def _release_archive(payload: bytes) -> bytes:
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as archive:

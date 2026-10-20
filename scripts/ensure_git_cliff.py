@@ -11,8 +11,14 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
-GIT_CLIFF_VERSION = "2.14.2"
+from auto_changelog_release_action.git_cliff_version import (
+    VERSION_FILE_NAME,
+    read_git_cliff_version,
+)
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+VERSION_FILE = PROJECT_ROOT / VERSION_FILE_NAME
+GIT_CLIFF_VERSION = read_git_cliff_version(VERSION_FILE)
 GIT_CLIFF_BINARY = (
     PROJECT_ROOT / ".cache" / "tools" / "git-cliff" / GIT_CLIFF_VERSION / "git-cliff"
 )

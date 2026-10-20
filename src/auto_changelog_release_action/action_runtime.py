@@ -7,10 +7,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from auto_changelog_release_action.actions_io import append_kv
-from auto_changelog_release_action.cliff_config import (
-    DEFAULT_CLIFF_CONFIG,
-    ensure_cliff_config,
-    read_cliff_version,
+from auto_changelog_release_action.cliff_config import DEFAULT_CLIFF_CONFIG, ensure_cliff_config
+from auto_changelog_release_action.git_cliff_version import (
+    VERSION_FILE_NAME,
+    read_git_cliff_version,
 )
 from auto_changelog_release_action.git_setup import configure_git_author
 from auto_changelog_release_action.install_git_cliff import install_git_cliff
@@ -213,14 +213,6 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
     )
 
     cliff_path = Path(DEFAULT_CLIFF_CONFIG)
-    cliff_version = read_cliff_version(cliff_path) if cliff_path.is_file() else None
-    if cliff_version:
-        print(f"✅ Extracted CLIFF_VERSION: {cliff_version}")
-    elif cliff_path.is_file():
-        print(f"⚠️  No CLIFF_VERSION found in {cliff_path}")
-    else:
-        print(f"❌ File not found: {cliff_path}")
-
     ensure_cliff_config(
         cliff_path,
         templates_root=config.action_path,
@@ -228,7 +220,9 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
         repository=config.repository,
         server_url=config.server_url,
     )
-    install_git_cliff(cliff_version)
+    git_cliff_binary = install_git_cliff(
+        read_git_cliff_version(config.action_path / VERSION_FILE_NAME)
+    )
 
     previous_git_cliff_offline = os.environ.get("GIT_CLIFF_OFFLINE")
     os.environ["GIT_CLIFF_OFFLINE"] = bool_string(config.git_cliff_offline)
@@ -251,6 +245,7 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
                     publish_token=config.release_publish_token,
                     host=config.host,
                     trigger_release_workflows=config.trigger_release_workflows,
+                    git_cliff_binary=str(git_cliff_binary),
                 ),
                 cwd=Path.cwd(),
             )
@@ -268,6 +263,7 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
                 cliff_config=Path(DEFAULT_CLIFF_CONFIG),
                 git_branch=config.git_ref.removeprefix("refs/heads/"),
                 commit_unreleased_changelog=config.commit_unreleased_changelog,
+                git_cliff_binary=str(git_cliff_binary),
             ),
             cwd=Path.cwd(),
         )

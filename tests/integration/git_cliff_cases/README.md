@@ -21,8 +21,9 @@ The tests use the real `git-cliff` binary, the checked-in template and the produ
 and do not publish commits, tags, or releases.
 
 With Git and `faketime` installed on Linux x86_64, check the recorded output locally.
-The Taskipy hook prepares the official git-cliff 2.14.2 binary under `.cache/tools/git-cliff/`
-if necessary. The test does not use a system-installed git-cliff:
+The Taskipy hook prepares the official git-cliff binary pinned in
+`versions.gitcliff.env` under `.cache/tools/git-cliff/` if necessary. The test
+does not use a system-installed git-cliff:
 
 ```bash
 poetry run task goldens-check

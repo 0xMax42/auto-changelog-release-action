@@ -2,12 +2,23 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from auto_changelog_release_action import action_runtime
+from auto_changelog_release_action.git_cliff_version import VERSION_FILE_NAME
 from auto_changelog_release_action.release_flow import ReleaseFlowResult
 from auto_changelog_release_action.runtime_host import RuntimeHost
 from auto_changelog_release_action.version_bump_flow import VersionBumpResult
 from auto_changelog_release_action.version_change_flow import VersionChangeResult
 from auto_changelog_release_action.versioning import default_version_regex_for_file
+
+
+@pytest.fixture(autouse=True)
+def pinned_git_cliff_version(tmp_path: Path) -> None:
+    """Provide the action's version pin for runtime tests."""
+    (tmp_path / VERSION_FILE_NAME).write_text(
+        'GIT_CLIFF_VERSION="v2.14.2"\n', encoding="utf-8"
+    )
 
 
 def clear_runtime_environment(monkeypatch) -> None:
@@ -33,9 +44,17 @@ def test_run_action_runtime_uses_api_url_for_release_requests(
     tmp_path: Path,
 ) -> None:
     captured: dict[str, object] = {}
+    action_root = tmp_path / "action"
+    action_root.mkdir()
+    (action_root / VERSION_FILE_NAME).write_text(
+        'GIT_CLIFF_VERSION="v2.15.0"\n', encoding="utf-8"
+    )
+    (tmp_path / "cliff.toml").write_text(
+        '# CLIFF_VERSION=99.99.99\n', encoding="utf-8"
+    )
 
     config = action_runtime.ActionRuntimeConfig(
-        action_path=tmp_path,
+        action_path=action_root,
         host=RuntimeHost.GITEA,
         api_url="https://api.example.invalid",
         server_url="https://example.invalid",
@@ -85,11 +104,15 @@ def test_run_action_runtime_uses_api_url_for_release_requests(
     )
     monkeypatch.setattr(action_runtime, "ensure_cliff_config", lambda *_args, **_kwargs: False)
     monkeypatch.setattr(
-        action_runtime, "install_git_cliff", lambda *_args, **_kwargs: "git-cliff 2.10.1"
+        action_runtime,
+        "install_git_cliff",
+        lambda version: captured.__setitem__("cliff_version", version)
+        or Path("/opt/git-cliff/bin/git-cliff"),
     )
 
     def fake_run_release_flow(release_config, *, cwd: Path) -> ReleaseFlowResult:
         captured["api_url"] = release_config.api_url
+        captured["git_cliff_binary"] = release_config.git_cliff_binary
         captured["host"] = release_config.host
         captured["trigger_release_workflows"] = release_config.trigger_release_workflows
         captured["cwd"] = cwd
@@ -110,6 +133,8 @@ def test_run_action_runtime_uses_api_url_for_release_requests(
 
     assert captured == {
         "api_url": "https://api.example.invalid",
+        "cliff_version": "2.15.0",
+        "git_cliff_binary": "/opt/git-cliff/bin/git-cliff",
         "host": RuntimeHost.GITEA,
         "trigger_release_workflows": True,
         "cwd": tmp_path,
