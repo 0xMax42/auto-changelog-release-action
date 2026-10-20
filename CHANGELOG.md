@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### 🐛 Bug Fixes
+
+- *(changelog)* Describe maintenance releases without changes - ([750e04b](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/750e04ba2d5019d16ee521de295e7f9c66d6e650))
+
 ### 🧪 Testing
 
 - *(changelog)* Add reproducible git-cliff golden fixtures - ([acbcc34](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/acbcc3472f54a719c3e9614e7d4178aba2b644d6))
