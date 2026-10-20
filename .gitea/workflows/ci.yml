@@ -36,6 +36,12 @@ jobs:
         run: |
           poetry run task compile
 
+      - name: Install faketime for deterministic git-cliff output
+        shell: bash
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends faketime
+
       - name: Run unit and integration tests
         shell: bash
         run: |

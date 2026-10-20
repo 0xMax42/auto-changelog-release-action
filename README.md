@@ -274,8 +274,11 @@ available commands with `poetry run task --list`. Tasks are configured in
 
 ```bash
 poetry run task test
+poetry run task ensure-git-cliff
 poetry run task test-unit
 poetry run task test-integration
+poetry run task goldens-check
+poetry run task goldens-update
 poetry run task test-podman
 poetry run task compile
 poetry run task lint
@@ -284,6 +287,12 @@ poetry run task typecheck
 ```
 
 `test-podman` requires Podman and enables the existing Podman-specific tests.
+Golden-file tests require Git, `faketime`, and Linux x86_64. The relevant Taskipy
+commands automatically download the official git-cliff 2.14.2 release into
+`.cache/tools/git-cliff/` on first use. Later runs reuse the cached binary and
+work offline. System-installed git-cliff binaries are not used by the golden tests.
+`goldens-update` regenerates the expected Markdown files; review them with
+`git diff -- tests/integration/git_cliff_cases/`.
 
 ## Notes
 

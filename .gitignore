@@ -1,5 +1,6 @@
 **/*.env
 .coverage
+.cache/
 __pycache__/
 *.pyc
 .mypy_cache/
