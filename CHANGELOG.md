@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### 🧪 Testing
+
+- *(changelog)* Add reproducible git-cliff golden fixtures - ([acbcc34](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/acbcc3472f54a719c3e9614e7d4178aba2b644d6))
+
 ### ⚙️ Miscellaneous Tasks
 
 - *(dev)* Add Taskipy commands for local workflows - ([e15aa28](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/e15aa2813235cd3a0dbaf0f953026650bfeedc5c))
