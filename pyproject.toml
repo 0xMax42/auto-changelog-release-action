@@ -20,6 +20,17 @@ pytest = "9.1.1"
 pytest-cov = "7.1.0"
 ruff = "0.16.10"
 mypy = "2.4.0"
+taskipy = "1.14.1"
+
+[tool.taskipy.tasks]
+test = { cmd = "pytest tests/unit tests/integration", help = "Run unit and integration tests." }
+test-unit = { cmd = "pytest tests/unit", help = "Run unit tests." }
+test-integration = { cmd = "pytest tests/integration", help = "Run integration tests." }
+test-podman = { cmd = "RUN_PODMAN_TESTS=1 pytest tests/podman -m podman", help = "Run Podman smoke tests." }
+compile = { cmd = "python -m compileall -q scripts src tests", help = "Check Python syntax." }
+lint = { cmd = "ruff check scripts src tests", help = "Lint the Python sources." }
+format-check = { cmd = "ruff format --check scripts src tests", help = "Check Python formatting." }
+typecheck = { cmd = "mypy src tests", help = "Run static type checks." }
 
 [tool.pytest.ini_options]
 addopts = ["-ra", "--strict-markers"]

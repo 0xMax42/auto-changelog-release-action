@@ -266,6 +266,25 @@ Set `git_cliff_offline: false` if you explicitly want `git-cliff` to perform its
 
 The action maps this to `GIT_CLIFF_OFFLINE` for the internal `git-cliff` invocations used for unreleased and release changelog generation.
 
+## Local development tasks
+
+Install development dependencies with `poetry install --with dev`, then list the
+available commands with `poetry run task --list`. Tasks are configured in
+`pyproject.toml`:
+
+```bash
+poetry run task test
+poetry run task test-unit
+poetry run task test-integration
+poetry run task test-podman
+poetry run task compile
+poetry run task lint
+poetry run task format-check
+poetry run task typecheck
+```
+
+`test-podman` requires Podman and enables the existing Podman-specific tests.
+
 ## Notes
 
 - `actions/checkout` or the Gitea equivalent should fetch full history. `fetch-depth: 0` is the safest default.
