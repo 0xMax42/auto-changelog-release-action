@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### ⚙️ Miscellaneous Tasks
+
+- *(dev)* Add Taskipy commands for local workflows - ([e15aa28](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/e15aa2813235cd3a0dbaf0f953026650bfeedc5c))
+
 ## [1.17.0](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.16.9..v1.17.0) - 2026-10-18
 
 ### 🚀 Features
