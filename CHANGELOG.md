@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - *(changelog)* Describe maintenance releases without changes - ([750e04b](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/750e04ba2d5019d16ee521de295e7f9c66d6e650))
 
+### 🚜 Refactor
+
+- *(cliff)* Centralize git-cliff version and executable selection - ([9c207a6](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/9c207a625bcd46a8e9ef41aee8374f46e035290a))
+
 ### 🧪 Testing
 
 - *(changelog)* Add reproducible git-cliff golden fixtures - ([acbcc34](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/acbcc3472f54a719c3e9614e7d4178aba2b644d6))
