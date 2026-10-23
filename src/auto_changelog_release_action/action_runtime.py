@@ -29,7 +29,10 @@ from auto_changelog_release_action.version_change_flow import (
     VersionChangeConfig,
     run_version_change_detection,
 )
-from auto_changelog_release_action.versioning import default_version_regex_for_file
+from auto_changelog_release_action.versioning import (
+    default_version_regex_for_file,
+    extract_version,
+)
 
 
 @dataclass(frozen=True)
@@ -162,11 +165,30 @@ def config_from_environment() -> ActionRuntimeConfig:
 def run_action_runtime(config: ActionRuntimeConfig) -> None:
     """Execute the full action pipeline for the current repository state."""
 
-    configure_git_author(config.author_name, config.author_email)
     resolved_version_regex = config.version_regex or default_version_regex_for_file(
         config.version_file
     )
+    version_file = Path(config.version_file)
+    if version_file.is_file():
+        try:
+            current_version = extract_version(
+                version_file.read_text(encoding="utf-8"), resolved_version_regex
+            )
+        except ValueError:
+            current_version = None
 
+        if current_version == "0.0.0":
+            print("ℹ️  Version 0.0.0 disables automatic bumps and release processing.")
+            write_version_bump_outputs(config, version_bumped=False, version_after=None)
+            write_version_change_outputs(
+                config, version_changed=False, version_before=None, version_after=None
+            )
+            write_release_outputs(
+                config, release_created=False, release_prerelease=False, release_tag=None
+            )
+            return
+
+    configure_git_author(config.author_name, config.author_email)
     bump_result = run_version_bump(
         VersionBumpConfig(
             version_file=config.version_file,

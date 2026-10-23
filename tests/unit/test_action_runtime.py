@@ -39,6 +39,153 @@ def clear_runtime_environment(monkeypatch) -> None:
         monkeypatch.delenv(name, raising=False)
 
 
+@pytest.mark.parametrize("pattern_kind", ("major", "minor", "patch"))
+@pytest.mark.parametrize(
+    ("version_file", "version_regex", "file_contents"),
+    [
+        ("VERSION", "", "0.0.0\n"),
+        (
+            "pyproject.toml",
+            r'^version\s*=\s*"([^"]+)"',
+            '[tool.poetry]\nversion = "0.0.0"\n',
+        ),
+    ],
+)
+def test_run_action_runtime_skips_zero_version_without_side_effects(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    pattern_kind: str,
+    version_file: str,
+    version_regex: str,
+    file_contents: str,
+) -> None:
+    (tmp_path / version_file).write_text(file_contents, encoding="utf-8")
+    github_output = tmp_path / "github_output.txt"
+    github_env = tmp_path / "github_env.txt"
+    config = action_runtime.ActionRuntimeConfig(
+        action_path=tmp_path,
+        host=RuntimeHost.GITEA,
+        api_url="https://git.example.invalid/api/v1",
+        server_url="https://git.example.invalid",
+        repository="owner/repo",
+        git_ref="refs/heads/main",
+        github_output=str(github_output),
+        github_env=str(github_env),
+        author_name="CI Bot",
+        author_email="ci@example.invalid",
+        allow_non_main_release=False,
+        version_file=version_file,
+        version_regex=version_regex,
+        major_patterns=".*" if pattern_kind == "major" else "",
+        minor_patterns=".*" if pattern_kind == "minor" else "",
+        patch_patterns=".*" if pattern_kind == "patch" else "",
+        git_cliff_offline=True,
+        revision_range="before..after",
+        github_event_before="before",
+        github_sha="after",
+        release_publish_token="token",
+        commit_unreleased_changelog=True,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    def unexpected(*_args, **_kwargs) -> None:
+        raise AssertionError("The 0.0.0 guard must skip the release pipeline")
+
+    for name in (
+        "configure_git_author",
+        "run_version_bump",
+        "run_version_change_detection",
+        "ensure_cliff_config",
+        "install_git_cliff",
+        "run_release_flow",
+        "run_unreleased_changelog_flow",
+    ):
+        monkeypatch.setattr(action_runtime, name, unexpected)
+
+    action_runtime.run_action_runtime(config)
+
+    assert github_output.read_text(encoding="utf-8") == (
+        "version_bumped=false\n"
+        "version_changed=false\n"
+        "release_created=false\n"
+        "release_prerelease=false\n"
+        "release_tag=\n"
+    )
+    assert github_env.read_text(encoding="utf-8") == (
+        "VERSION_BUMPED=false\n"
+        "VERSION_CHANGED=false\n"
+        "RELEASE_CREATED=false\n"
+        "RELEASE_PRERELEASE=false\n"
+        "RELEASE_TAG=\n"
+    )
+    assert (tmp_path / version_file).read_text(encoding="utf-8") == file_contents
+    assert not (tmp_path / "cliff.toml").exists()
+    assert not (tmp_path / "CHANGELOG.md").exists()
+
+
+def test_run_action_runtime_allows_manual_first_release_from_zero_version(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    # The working version is no longer 0.0.0 even though the previous commit was.
+    (tmp_path / "VERSION").write_text("0.1.0\n", encoding="utf-8")
+    config = action_runtime.ActionRuntimeConfig(
+        action_path=tmp_path,
+        host=RuntimeHost.GITEA,
+        api_url="https://git.example.invalid/api/v1",
+        server_url="https://git.example.invalid",
+        repository="owner/repo",
+        git_ref="refs/heads/main",
+        github_output="",
+        github_env="",
+        author_name="CI Bot",
+        author_email="ci@example.invalid",
+        allow_non_main_release=False,
+        version_file="VERSION",
+        version_regex="",
+        major_patterns="",
+        minor_patterns="",
+        patch_patterns="^fix:",
+        git_cliff_offline=True,
+        revision_range="before..after",
+        github_event_before="before",
+        github_sha="after",
+        release_publish_token="token",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(action_runtime, "configure_git_author", lambda *_args: None)
+    observed: dict[str, str] = {}
+
+    def fake_bump(bump_config) -> VersionBumpResult:
+        assert bump_config.patch_patterns_raw == "^fix:"
+        return VersionBumpResult(version_bumped=False)
+
+    def fake_change(change_config) -> VersionChangeResult:
+        assert change_config.version_file == "VERSION"
+        return VersionChangeResult(
+            version_changed=True, version_before="0.0.0", version_after="0.1.0"
+        )
+
+    def fake_release(release_config, *, cwd: Path) -> ReleaseFlowResult:
+        observed["version"] = release_config.version
+        observed["binary"] = release_config.git_cliff_binary
+        assert cwd == tmp_path
+        return ReleaseFlowResult(
+            release_created=True, release_prerelease=False, release_tag="v0.1.0"
+        )
+
+    monkeypatch.setattr(action_runtime, "run_version_bump", fake_bump)
+    monkeypatch.setattr(action_runtime, "run_version_change_detection", fake_change)
+    monkeypatch.setattr(action_runtime, "ensure_cliff_config", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr(
+        action_runtime, "install_git_cliff", lambda _version: Path("/opt/bin/git-cliff")
+    )
+    monkeypatch.setattr(action_runtime, "run_release_flow", fake_release)
+
+    action_runtime.run_action_runtime(config)
+
+    assert observed == {"version": "0.1.0", "binary": "/opt/bin/git-cliff"}
+
+
 def test_run_action_runtime_uses_api_url_for_release_requests(
     monkeypatch,
     tmp_path: Path,

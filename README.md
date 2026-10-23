@@ -227,6 +227,14 @@ When a bump is triggered, the action updates `version_file`, commits the change,
 
 If no bump is triggered, the action compares the version value across commits. A release is created only when the version actually changed.
 
+The exact version `0.0.0` disables the release pipeline, even when commit messages
+match automatic bump patterns or the version was just changed to `0.0.0`.
+No version bump, changelog generation, git-cliff installation, commit, tag, or
+release is performed. The action reports `false` for its release-related
+boolean outputs and an empty `release_tag`. Set the version manually to a
+nonzero value to enable normal processing; matching bump patterns on that push
+may still advance the manually selected version.
+
 ## Changelog grouping
 
 The bundled `git-cliff` configuration groups conventional commits into fixed changelog sections such as features, fixes, documentation, and refactors.
