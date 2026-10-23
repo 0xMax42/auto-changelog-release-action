@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
+- *(release)* Skip all processing for version 0.0.0 (#43) - ([ee5eedf](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/ee5eedf23dd962d4721afb215d33377610761500))
 - *(changelog)* Describe maintenance releases without changes - ([750e04b](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/750e04ba2d5019d16ee521de295e7f9c66d6e650))
 
 ### 🚜 Refactor
