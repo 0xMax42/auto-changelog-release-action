@@ -1,11 +1,8 @@
-**/*.env
-!versions.gitcliff.env
-.coverage
+node_modules/
+coverage/
 .cache/
-__pycache__/
-*.pyc
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
-.venv/
-htmlcov/
+*.tsbuildinfo
+.DS_Store
+
+# dist/ is intentionally tracked once the action is wired up.
+# GitHub/Gitea consume the prebuilt JavaScript artifact.

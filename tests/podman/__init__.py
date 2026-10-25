@@ -1,1 +1,0 @@
-"""Podman smoke tests package."""
