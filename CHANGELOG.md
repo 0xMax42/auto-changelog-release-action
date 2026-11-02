@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.0](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.18.2..v1.19.0) - 2026-11-02
+
+### 🚀 Features
+
+- *(changelog)* Classify security commits by type (#49) - ([1b5a9ce](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/1b5a9ceca55857c7329dc0309328db31cefef577))
+
 ## [1.18.2](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.18.1..v1.18.2) - 2026-10-29
 
 ### 📦 Dependencies
