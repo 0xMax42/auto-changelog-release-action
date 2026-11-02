@@ -134,6 +134,7 @@ commit_parsers = [
     { message = "^test", group = "<!-- 07 -->🧪 Testing" },
     { message = "^chore\\(deps.*\\)", group = "<!-- 10 -->📦 Dependencies" },
     { message = "^chore|^ci", group = "<!-- 08 -->⚙️ Miscellaneous Tasks" },
+    { message = "^security", group = "<!-- 09 -->🛡️ Security" },
     { body = ".*security", group = "<!-- 09 -->🛡️ Security" },
     { message = "^revert", group = "<!-- 11 -->◀️ Revert" },
     { message = ".*", group = "<!-- 12 -->💼 Other" },
