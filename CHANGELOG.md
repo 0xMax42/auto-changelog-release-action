@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.1](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.0..v1.19.1) - 2026-11-05
+
+### 📦 Dependencies
+
+- *(deps)* Update dependency ruff to v0.17.2 - ([d223225](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/d2232259cd82667a65b82d0e62a37df1bce7bbb0))
+
 ## [1.19.0](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.18.2..v1.19.0) - 2026-11-02
 
 ### 🚀 Features
