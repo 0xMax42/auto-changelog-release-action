@@ -177,7 +177,7 @@ def test_run_action_runtime_allows_manual_first_release_from_zero_version(
     monkeypatch.setattr(action_runtime, "run_version_change_detection", fake_change)
     monkeypatch.setattr(action_runtime, "ensure_cliff_config", lambda *_args, **_kwargs: True)
     monkeypatch.setattr(
-        action_runtime, "install_git_cliff", lambda _version: Path("/opt/bin/git-cliff")
+        action_runtime, "install_git_cliff", lambda _version, **_kwargs: Path("/opt/bin/git-cliff")
     )
     monkeypatch.setattr(action_runtime, "run_release_flow", fake_release)
 
@@ -253,7 +253,7 @@ def test_run_action_runtime_uses_api_url_for_release_requests(
     monkeypatch.setattr(
         action_runtime,
         "install_git_cliff",
-        lambda version: captured.__setitem__("cliff_version", version)
+        lambda version, *, token: captured.update(cliff_version=version, cliff_token=token)
         or Path("/opt/git-cliff/bin/git-cliff"),
     )
 
@@ -281,6 +281,7 @@ def test_run_action_runtime_uses_api_url_for_release_requests(
     assert captured == {
         "api_url": "https://api.example.invalid",
         "cliff_version": "2.15.0",
+        "cliff_token": "",
         "git_cliff_binary": "/opt/git-cliff/bin/git-cliff",
         "host": RuntimeHost.GITEA,
         "trigger_release_workflows": True,
@@ -316,6 +317,7 @@ def test_run_action_runtime_writes_release_outputs(monkeypatch, tmp_path: Path) 
         release_publish_token="token",
     )
 
+    captured_install: dict[str, str] = {}
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(action_runtime, "configure_git_author", lambda *_args: None)
     monkeypatch.setattr(
@@ -334,7 +336,10 @@ def test_run_action_runtime_writes_release_outputs(monkeypatch, tmp_path: Path) 
     )
     monkeypatch.setattr(action_runtime, "ensure_cliff_config", lambda *_args, **_kwargs: False)
     monkeypatch.setattr(
-        action_runtime, "install_git_cliff", lambda *_args, **_kwargs: "git-cliff 2.10.1"
+        action_runtime,
+        "install_git_cliff",
+        lambda version, *, token: captured_install.update(version=version, token=token)
+        or "git-cliff 2.10.1",
     )
     monkeypatch.setattr(
         action_runtime,
@@ -353,6 +358,7 @@ def test_run_action_runtime_writes_release_outputs(monkeypatch, tmp_path: Path) 
 
     action_runtime.run_action_runtime(config)
 
+    assert captured_install == {"version": "2.14.2", "token": "token"}
     assert github_output.read_text(encoding="utf-8") == (
         "version_bumped=false\n"
         "version_changed=true\n"

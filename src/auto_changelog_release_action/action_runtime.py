@@ -243,7 +243,8 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
         server_url=config.server_url,
     )
     git_cliff_binary = install_git_cliff(
-        read_git_cliff_version(config.action_path / VERSION_FILE_NAME)
+        read_git_cliff_version(config.action_path / VERSION_FILE_NAME),
+        token=config.release_publish_token if config.host is RuntimeHost.GITHUB else "",
     )
 
     previous_git_cliff_offline = os.environ.get("GIT_CLIFF_OFFLINE")

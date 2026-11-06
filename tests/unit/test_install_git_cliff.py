@@ -1,12 +1,75 @@
 from __future__ import annotations
 
+import io
 import os
 import shutil
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 import pytest
 
 from auto_changelog_release_action import install_git_cliff as installer
+
+
+@pytest.mark.parametrize("token", ["", "github-token"])
+def test_fetch_release_info_uses_optional_github_token(
+    monkeypatch: pytest.MonkeyPatch, token: str
+) -> None:
+    requests: list[str | urllib.request.Request] = []
+
+    def fake_urlopen(request: str | urllib.request.Request) -> io.BytesIO:
+        requests.append(request)
+        return io.BytesIO(b'{"tag_name": "v2.14.2"}')
+
+    monkeypatch.setattr(installer.urllib.request, "urlopen", fake_urlopen)
+
+    assert installer.fetch_release_info("2.14.2", token=token) == {"tag_name": "v2.14.2"}
+    assert len(requests) == 1
+    if token:
+        assert isinstance(requests[0], urllib.request.Request)
+        assert requests[0].get_header("Authorization") == "Bearer github-token"
+    else:
+        assert requests[0] == installer.resolve_release_url("2.14.2")
+
+
+@pytest.mark.parametrize("status", [401, 403, 404, 429])
+def test_fetch_release_info_retries_anonymously_on_auth_error(
+    monkeypatch: pytest.MonkeyPatch, status: int
+) -> None:
+    requests: list[str | urllib.request.Request] = []
+
+    def fake_urlopen(request: str | urllib.request.Request) -> io.BytesIO:
+        requests.append(request)
+        if len(requests) == 1:
+            raise urllib.error.HTTPError("https://api.github.com", status, "Rejected", {}, None)
+        return io.BytesIO(b'{"tag_name": "v2.14.2"}')
+
+    monkeypatch.setattr(installer.urllib.request, "urlopen", fake_urlopen)
+
+    assert installer.fetch_release_info("2.14.2", token="github-token") == {
+        "tag_name": "v2.14.2"
+    }
+    assert isinstance(requests[0], urllib.request.Request)
+    assert requests[1] == installer.resolve_release_url("2.14.2")
+
+
+def test_fetch_release_info_does_not_retry_other_http_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    requests: list[object] = []
+
+    def fake_urlopen(request: str | urllib.request.Request) -> io.BytesIO:
+        requests.append(request)
+        raise urllib.error.HTTPError("https://api.github.com", 422, "Invalid request", {}, None)
+
+    monkeypatch.setattr(installer.urllib.request, "urlopen", fake_urlopen)
+
+    with pytest.raises(urllib.error.HTTPError) as error:
+        installer.fetch_release_info("2.14.2", token="github-token")
+
+    assert error.value.code == 422
+    assert len(requests) == 1
 
 
 def test_install_git_cliff_requires_explicit_version() -> None:
@@ -42,7 +105,7 @@ def test_install_git_cliff_returns_installed_binary_when_old_one_is_first_in_pat
         binary.chmod(0o755)
 
     monkeypatch.setattr(
-        installer, "fetch_release_info", lambda _version: {"tag_name": "v2.14.2"}
+        installer, "fetch_release_info", lambda _version, **_kwargs: {"tag_name": "v2.14.2"}
     )
     monkeypatch.setattr(
         installer, "select_asset_url", lambda *_args: "https://example.invalid/git-cliff.tar.gz"
@@ -72,7 +135,7 @@ def test_install_git_cliff_uses_existing_binary_without_fetching(
     monkeypatch.setattr(
         installer,
         "fetch_release_info",
-        lambda _version: (_ for _ in ()).throw(AssertionError("GitHub must not be queried")),
+        lambda _version, **_kwargs: (_ for _ in ()).throw(AssertionError("GitHub must not be queried")),
     )
 
     result = installer.install_git_cliff("2.10.1")

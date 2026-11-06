@@ -11,6 +11,7 @@ import stat
 import subprocess
 import tarfile
 import tempfile
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -27,11 +28,23 @@ def resolve_release_url(version: str) -> str:
     return f"https://api.github.com/repos/{REPO}/releases/tags/v{version}"
 
 
-def fetch_release_info(version: str) -> dict[str, object]:
-    """Fetch git-cliff release metadata from the GitHub API."""
+def fetch_release_info(version: str, *, token: str = "") -> dict[str, object]:
+    """Fetch git-cliff release metadata, falling back to anonymous access on auth errors."""
 
     api_url = resolve_release_url(version)
     print(f"🔍 Fetching release info ({api_url})…")
+    request = (
+        urllib.request.Request(api_url, headers={"Authorization": f"Bearer {token}"})
+        if token
+        else api_url
+    )
+    try:
+        with urllib.request.urlopen(request) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as error:
+        if not token or error.code not in (401, 403, 404, 429):
+            raise
+
     with urllib.request.urlopen(api_url) as response:
         return json.loads(response.read().decode("utf-8"))
 
@@ -134,6 +147,7 @@ def install_binary(source_path: Path, install_dir: Path) -> None:
 def install_git_cliff(
     version: str,
     *,
+    token: str = "",
     arch_os: str = DEFAULT_ARCH_OS,
     install_dir: str = DEFAULT_INSTALL_DIR,
 ) -> Path:
@@ -149,7 +163,7 @@ def install_git_cliff(
             print(f"✅ Using existing git-cliff {existing_version} at {existing_binary}")
             return Path(existing_binary).resolve()
 
-    release_info = fetch_release_info(version)
+    release_info = fetch_release_info(version, token=token)
     resolved_version = str(release_info["tag_name"])
     asset_url = select_asset_url(release_info, arch_os)
     asset_name = asset_url.rsplit("/", 1)[-1]
