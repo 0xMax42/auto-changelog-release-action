@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.2](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.1..v1.19.2) - 2026-11-06
+
+### 🐛 Bug Fixes
+
+- Authenticate git-cliff release lookups with anonymous fallback (#51) - ([01d9c99](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/01d9c993b385358253a89b65bc183387277c3d6c))
+
 ## [1.19.1](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.0..v1.19.1) - 2026-11-05
 
 ### 📦 Dependencies
