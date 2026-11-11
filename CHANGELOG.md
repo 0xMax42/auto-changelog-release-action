@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.6](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.5..v1.19.6) - 2026-11-11
+
+### 📦 Dependencies
+
+- *(deps)* Update dependency mypy to v2.4.1 - ([95a3436](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/95a3436d4a7d94e904b37b54d4edbe2307edcfea))
+
 ## [1.19.5](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.4..v1.19.5) - 2026-11-11
 
 ### 🐛 Bug Fixes
