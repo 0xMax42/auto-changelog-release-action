@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.5](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.4..v1.19.5) - 2026-11-11
+
+### 🐛 Bug Fixes
+
+- *(release)* Push release branch and tag atomically (#55) - ([c59bbc2](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/c59bbc2812f59b35c65ba60ba8f228a1656c9960))
+
 ## [1.19.4](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.3..v1.19.4) - 2026-11-10
 
 ### 📦 Dependencies
