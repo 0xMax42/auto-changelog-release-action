@@ -140,7 +140,7 @@ def release_api_body(release_notes: str) -> str:
 
 
 def commit_release_changelog(config: ReleaseConfig, *, cwd: Path) -> bool:
-    """Commit and push CHANGELOG.md if the release render changed it."""
+    """Commit CHANGELOG.md if the release render changed it."""
 
     run_git(["add", str(config.changelog_file)], cwd=cwd)
 
@@ -156,7 +156,6 @@ def commit_release_changelog(config: ReleaseConfig, *, cwd: Path) -> bool:
         ["commit", "-m", RELEASE_COMMIT_MESSAGE_TEMPLATE.format(version=config.version)],
         cwd=cwd,
     )
-    run_git(["push", "origin", config.git_branch], cwd=cwd)
     return True
 
 
@@ -168,7 +167,7 @@ def tag_exists(tag_name: str, *, cwd: Path) -> bool:
 
 
 def create_release_tag(config: ReleaseConfig, release_notes: str, *, cwd: Path) -> bool:
-    """Create and push the annotated release tag when it is still missing."""
+    """Create the annotated release tag locally when it is still missing."""
 
     tag_name = f"v{config.version}"
     if tag_exists(tag_name, cwd=cwd):
@@ -192,7 +191,6 @@ def create_release_tag(config: ReleaseConfig, release_notes: str, *, cwd: Path) 
             cwd=cwd,
             env=env,
         )
-        run_git(["push", "origin", tag_name], cwd=cwd)
         return True
     finally:
         if temp_path is not None and temp_path.exists():
@@ -288,6 +286,16 @@ def run_release_flow(config: ReleaseConfig, *, cwd: Path) -> ReleaseFlowResult:
     create_release_tag(config, release_notes, cwd=cwd)
 
     tag_name = f"v{config.version}"
+    run_git(
+        [
+            "push",
+            "--atomic",
+            "origin",
+            f"HEAD:refs/heads/{config.git_branch}",
+            f"refs/tags/{tag_name}:refs/tags/{tag_name}",
+        ],
+        cwd=cwd,
+    )
     prerelease = is_configured_prerelease_version(config.version)
     if prerelease:
         print("ℹ️  Detected configured pre-release label.")

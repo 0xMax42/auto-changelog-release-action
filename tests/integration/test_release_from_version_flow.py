@@ -11,6 +11,8 @@ from contextlib import redirect_stdout
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import pytest
+
 from auto_changelog_release_action import action_runtime
 from auto_changelog_release_action.release_flow import ReleaseConfig, run_release_flow
 from auto_changelog_release_action.runtime_host import RuntimeHost
@@ -476,3 +478,65 @@ def test_action_runtime_gitea_mixed_runner_env_publishes_release(
         "draft": False,
         "prerelease": False,
     }
+
+
+def test_release_pushes_version_commit_when_changelog_is_unchanged(tmp_path: Path) -> None:
+    repo = init_local_git_repo(tmp_path)
+    remote_root = init_local_bare_remote(tmp_path)
+    repo.add_remote("origin", str(remote_root))
+    repo.write("cliff.toml", "test\n")
+    changelog_output = "# Changelog\n\n## [1.2.3] - 2026-05-10\n- Added feature\n"
+    repo.write("CHANGELOG.md", changelog_output)
+    repo.write("VERSION", "1.2.2\n")
+    repo.commit_all("chore: initial import")
+    repo.push("origin", "main", set_upstream=True)
+
+    repo.write("VERSION", "1.2.3\n")
+    version_commit = repo.commit_all("chore(version): bump version to 1.2.3")
+
+    with ReleaseRequestRecorder() as recorder:
+        run_release_from_version(
+            repo.root,
+            version_after="1.2.3",
+            api_url=recorder.api_url,
+            fake_output=changelog_output,
+        )
+
+    assert repo.rev_parse("HEAD") == version_commit
+    assert remote_branch_head(remote_root, "main") == version_commit
+    assert remote_tag_exists(remote_root, "v1.2.3") is True
+    assert repo.resolve_commit("v1.2.3") == version_commit
+    assert len(recorder.requests) == 1
+
+
+def test_rejected_atomic_tag_push_leaves_remote_branch_unchanged(tmp_path: Path) -> None:
+    repo = init_local_git_repo(tmp_path)
+    remote_root = init_local_bare_remote(tmp_path)
+    repo.add_remote("origin", str(remote_root))
+    repo.write("cliff.toml", "test\n")
+    repo.commit_all("chore: initial import")
+    repo.push("origin", "main", set_upstream=True)
+    original_head = remote_branch_head(remote_root, "main")
+
+    hook = remote_root / "hooks" / "update"
+    hook.write_text(
+        "#!/bin/sh\n"
+        'case "$1" in refs/tags/*) exit 1 ;; esac\n'
+        "exit 0\n",
+        encoding="utf-8",
+    )
+    hook.chmod(hook.stat().st_mode | stat.S_IEXEC)
+
+    with ReleaseRequestRecorder() as recorder:
+        with pytest.raises(subprocess.CalledProcessError):
+            run_release_from_version(
+                repo.root,
+                version_after="1.2.3",
+                api_url=recorder.api_url,
+                fake_output="# Changelog\n\n## [1.2.3] - 2026-05-10\n- Added feature\n",
+            )
+
+    assert remote_branch_head(remote_root, "main") == original_head
+    assert remote_tag_exists(remote_root, "v1.2.3") is False
+    assert recorder.requests == []
+
