@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.19.7](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.6..v1.19.7) - 2026-11-12
+
+### 🐛 Bug Fixes
+
+- *(release)* Handle existing GitHub releases on HTTP 422 (#57) - ([ea035d9](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/ea035d908a11e11ff862a4ff40905118524f4e5f))
+
 ## [1.19.6](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.5..v1.19.6) - 2026-11-11
 
 ### 📦 Dependencies
