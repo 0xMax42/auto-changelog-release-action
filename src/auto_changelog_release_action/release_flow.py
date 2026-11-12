@@ -261,6 +261,22 @@ def create_release(
         if status == 409:
             print("🔁 Release already exists (409) – skipping.")
             return False
+        if status == 422 and config.host is RuntimeHost.GITHUB:
+            tag_endpoint = f"{endpoint}/tags/{payload_data['tag_name']}"
+            tag_request = urllib.request.Request(
+                tag_endpoint,
+                headers={"Authorization": f"token {config.publish_token}"},
+            )
+            try:
+                with urllib.request.urlopen(tag_request) as response:
+                    existing_release = json.load(response)
+            except urllib.error.HTTPError as error:
+                if error.code != 404:
+                    raise
+            else:
+                if existing_release.get("tag_name") == payload_data["tag_name"]:
+                    print("🔁 Release already exists (GitHub 422) – skipping.")
+                    return False
 
         suffix = status if status is not None else "request error"
         print(f"⚠️  Release attempt failed (HTTP {suffix})")

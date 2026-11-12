@@ -190,3 +190,69 @@ def test_create_release_returns_false_when_release_already_exists(
     created = create_release(config, "[1.2.3]\n- Added feature\n", prerelease=False)
 
     assert created is False
+
+
+@pytest.mark.parametrize(
+    ("host", "existing_tag", "expected_calls", "expected_result"),
+    [
+        (RuntimeHost.GITHUB, "v1.2.3", ["POST", "GET"], False),
+        (RuntimeHost.GITHUB, "v9.9.9", ["POST", "GET"], None),
+        (RuntimeHost.GITHUB, None, ["POST", "GET"], None),
+        (RuntimeHost.GITEA, "v1.2.3", ["POST"], None),
+    ],
+)
+def test_create_release_handles_github_422_only_for_existing_tag(
+    monkeypatch,
+    tmp_path: Path,
+    host: RuntimeHost,
+    existing_tag: str | None,
+    expected_calls: list[str],
+    expected_result: bool | None,
+) -> None:
+    config = ReleaseConfig(
+        changelog_file=tmp_path / "CHANGELOG.md",
+        cliff_config=tmp_path / "cliff.toml",
+        version="1.2.3",
+        git_branch="main",
+        api_url="https://api.example.invalid",
+        repository_owner="actions",
+        repository_name="auto-changelog-release-action",
+        publish_token="test-token",
+        host=host,
+    )
+    calls: list[str] = []
+
+    def fake_urlopen(request):
+        calls.append(request.get_method())
+        if request.get_method() == "POST":
+            raise HTTPError(
+                url=request.full_url,
+                code=422,
+                msg="Validation Failed",
+                hdrs=None,
+                fp=io.BytesIO(b'{"message": "Validation Failed"}'),
+            )
+        assert request.full_url.endswith("/releases/tags/v1.2.3")
+        assert request.get_header("Authorization") == "token test-token"
+        if existing_tag is None:
+            raise HTTPError(
+                url=request.full_url,
+                code=404,
+                msg="Not Found",
+                hdrs=None,
+                fp=io.BytesIO(b'{"message": "Not Found"}'),
+            )
+        return io.BytesIO(json.dumps({"tag_name": existing_tag}).encode("utf-8"))
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+
+    if expected_result is None:
+        with pytest.raises(RuntimeError, match="Giving up"):
+            create_release(config, "[1.2.3]\n- Added feature\n", prerelease=False, max_attempts=1)
+    else:
+        assert (
+            create_release(config, "[1.2.3]\n- Added feature\n", prerelease=False, max_attempts=1)
+            is expected_result
+        )
+
+    assert calls == expected_calls
