@@ -26,11 +26,42 @@ HOOK_ENV_KEYS = (
 
 
 @dataclass(frozen=True)
+class GitState:
+    """Logical Git state that a working-tree transformation must preserve."""
+
+    head: str
+    ref: str
+    refs: str
+    index: str
+
+
+@dataclass(frozen=True)
 class HookContext:
     root: Path
     files: tuple[str, ...]
-    head: str
-    ref: str
+    git_state: GitState
+
+
+def _hook_environment() -> dict[str, str]:
+    env = {key: os.environ[key] for key in HOOK_ENV_KEYS if key in os.environ}
+    env.setdefault("PATH", os.defpath)
+    env["GIT_OPTIONAL_LOCKS"] = "0"
+    return env
+
+
+def capture_git_state(root: Path) -> GitState:
+    """Capture refs and logical index entries, not Git's internal cache files."""
+    env = _hook_environment()
+    return GitState(
+        head=run_git_stdout(["rev-parse", "HEAD"], cwd=root, env=env),
+        ref=run_git_stdout(["rev-parse", "--symbolic-full-name", "HEAD"], cwd=root, env=env),
+        refs=run_git(
+            ["for-each-ref", "--sort=refname", "--format=%(refname) %(objectname) %(symref)"],
+            cwd=root,
+            env=env,
+        ).stdout,
+        index=run_git(["ls-files", "--stage", "-v", "-z"], cwd=root, env=env).stdout,
+    )
 
 
 def _status(root: Path) -> list[str]:
@@ -75,8 +106,7 @@ def prepare_hook(version_file: str, additional_files: str) -> HookContext:
     return HookContext(
         root=root,
         files=tuple(dict.fromkeys(files)),
-        head=run_git_stdout(["rev-parse", "HEAD"], cwd=root),
-        ref=run_git_stdout(["rev-parse", "--symbolic-full-name", "HEAD"], cwd=root),
+        git_state=capture_git_state(root),
     )
 
 
@@ -90,8 +120,7 @@ def run_hook(
     version_regex: str,
 ) -> None:
     """Run trusted workflow code, then verify its effects before staging any files."""
-    env = {key: os.environ[key] for key in HOOK_ENV_KEYS if key in os.environ}
-    env.setdefault("PATH", os.defpath)
+    env = _hook_environment()
     env.update(
         VERSION_BEFORE=version_before,
         VERSION_AFTER=version_after,
@@ -109,12 +138,8 @@ def run_hook(
     if result.stderr:
         print(result.stderr, end="", file=sys.stderr)
 
-    if (
-        run_git_stdout(["rev-parse", "HEAD"], cwd=context.root) != context.head
-        or run_git_stdout(["rev-parse", "--symbolic-full-name", "HEAD"], cwd=context.root)
-        != context.ref
-    ):
-        raise RuntimeError("Post-version-bump hook must not change HEAD or the current branch")
+    if capture_git_state(context.root) != context.git_state:
+        raise RuntimeError("Post-version-bump hook modified Git state")
 
     for entry in _status(context.root):
         if entry[:2] != "??" and entry[0] != " ":

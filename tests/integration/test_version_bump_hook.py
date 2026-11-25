@@ -119,6 +119,43 @@ def test_hook_created_commit_is_rejected(bump_repo: LocalGitRepo) -> None:
     assert bump_repo.run("tag") == ""
 
 
+@pytest.mark.parametrize(
+    "script",
+    [
+        'git tag "v$VERSION_AFTER"',
+        "git tag -d existing",
+        "git tag -f existing HEAD^",
+        "git branch unexpected",
+        "git update-ref refs/remotes/origin/main HEAD",
+        "git update-index --assume-unchanged unrelated.txt",
+        "git update-index --skip-worktree unrelated.txt",
+    ],
+)
+def test_hook_git_state_changes_are_rejected(bump_repo: LocalGitRepo, script: str) -> None:
+    bump_repo.tag("existing")
+    head = bump_repo.rev_parse("HEAD")
+    with pytest.raises(RuntimeError):
+        run_version_bump(config(bump_repo, script))
+    assert bump_repo.rev_parse("HEAD") == head
+    assert bump_repo.run("show", "HEAD:VERSION") == "1.2.3"
+
+
+def test_hook_allows_read_only_git_operations(bump_repo: LocalGitRepo) -> None:
+    bump_repo.tag("existing")
+    script = """
+test "$GIT_OPTIONAL_LOCKS" = 0
+git log -1
+git describe --tags
+git rev-parse HEAD
+git status
+cp "$VERSION_FILE" project.lock
+"""
+    result = run_version_bump(config(bump_repo, script, "project.lock"))
+    assert result.version_after == "1.2.4"
+    assert bump_repo.run("show", "HEAD:project.lock") == "1.2.4"
+    assert bump_repo.run("tag") == "existing"
+
+
 @pytest.mark.parametrize("files", ["../outside", "/tmp/outside", ".git/config"])
 def test_invalid_paths_rejected_before_bump(bump_repo: LocalGitRepo, files: str) -> None:
     with pytest.raises(ValueError):
