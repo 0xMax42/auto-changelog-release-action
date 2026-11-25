@@ -67,7 +67,8 @@ printf '%s\\n' "$VERSION_AFTER" > "extra file"
     assert bump_repo.run("show", "HEAD:VERSION") == "1.2.4"
     assert bump_repo.run("show", "HEAD:project.lock") == "1.2.4"
     assert bump_repo.run("show", "HEAD:extra file") == "1.2.4"
-    assert set(bump_repo.run("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").splitlines()) == {
+    committed_files = bump_repo.run("diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD")
+    assert set(committed_files.splitlines()) == {
         "VERSION",
         "project.lock",
         "extra file",
@@ -96,7 +97,7 @@ def test_invalid_hook_never_creates_version_commit(bump_repo: LocalGitRepo, scri
     assert bump_repo.run("tag") == ""
 
 
-def test_hook_cannot_create_a_release_commit(bump_repo: LocalGitRepo) -> None:
+def test_hook_created_commit_is_rejected(bump_repo: LocalGitRepo) -> None:
     with pytest.raises(RuntimeError):
         run_version_bump(config(bump_repo, "git commit --allow-empty -m unexpected"))
     assert bump_repo.head_subject() == "unexpected"

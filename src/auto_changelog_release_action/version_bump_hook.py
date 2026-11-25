@@ -49,12 +49,7 @@ def _status(root: Path) -> list[str]:
 
 def _validate_file(root: Path, value: str, *, required: bool) -> str:
     path = Path(value)
-    if (
-        not path.parts
-        or path.is_absolute()
-        or ".." in path.parts
-        or ".git" in path.parts
-    ):
+    if not path.parts or path.is_absolute() or ".." in path.parts or ".git" in path.parts:
         raise ValueError(f"Invalid repository-relative version bump file: {value!r}")
     target = root / path
     if target.resolve() != target or target.is_symlink():
