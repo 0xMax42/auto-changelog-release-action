@@ -15,7 +15,7 @@ It targets both Gitea and GitHub runtimes through one centralized host-resolutio
 1. `__main__.py` loads the environment and forwards execution to `action_runtime.py`.
 2. `action_runtime.py` resolves the runtime host, normalizes server and API URLs, writes action outputs, and coordinates the full run.
 3. `git_setup.py` configures the git author for generated commits.
-4. `version_bump_flow.py` checks commit messages and may bump the version file.
+4. `version_bump_flow.py` checks commit messages and may bump the version file. An opt-in `version_bump_hook.py` step synchronizes declared additional files before the version commit; it validates the worktree, authoritative version, and hook effects.
 5. If no bump happened, `version_change_flow.py` compares the version value across commits.
 6. `runtime_host.py` is the single source of truth for host detection and URL normalization.
 7. `cliff_config.py` creates `cliff.toml` from the host-specific bundled template when needed.

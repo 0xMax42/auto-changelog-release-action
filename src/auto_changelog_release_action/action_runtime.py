@@ -62,6 +62,8 @@ class ActionRuntimeConfig:
     release_publish_token: str
     trigger_release_workflows: bool = False
     commit_unreleased_changelog: bool = False
+    post_version_bump: str = ""
+    version_bump_files: str = ""
 
 
 def bool_string(value: bool) -> str:
@@ -153,6 +155,8 @@ def config_from_environment() -> ActionRuntimeConfig:
         github_event_before=os.environ.get("GITHUB_EVENT_BEFORE", ""),
         github_sha=os.environ.get("GITHUB_SHA", ""),
         release_publish_token=os.environ.get("RELEASE_PUBLISH_TOKEN", ""),
+        post_version_bump=os.environ.get("POST_VERSION_BUMP", ""),
+        version_bump_files=os.environ.get("VERSION_BUMP_FILES", ""),
         trigger_release_workflows=(
             os.environ.get("TRIGGER_RELEASE_WORKFLOWS", "false").lower() == "true"
         ),
@@ -199,6 +203,8 @@ def run_action_runtime(config: ActionRuntimeConfig) -> None:
             revision_range=config.revision_range,
             allow_non_main_release=config.allow_non_main_release,
             git_ref=config.git_ref,
+            post_version_bump=config.post_version_bump,
+            version_bump_files=config.version_bump_files,
         )
     )
     write_version_bump_outputs(

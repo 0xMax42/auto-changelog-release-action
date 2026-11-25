@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from auto_changelog_release_action.process_utils import run_git_stdout
+from auto_changelog_release_action.version_bump_hook import prepare_hook, run_hook
 from auto_changelog_release_action.versioning import (
     bump_version,
     detect_bump,
@@ -30,6 +31,8 @@ class VersionBumpConfig:
     revision_range: str
     allow_non_main_release: bool
     git_ref: str
+    post_version_bump: str = ""
+    version_bump_files: str = ""
 
 
 @dataclass(frozen=True)
@@ -112,11 +115,28 @@ def run_version_bump(config: VersionBumpConfig) -> VersionBumpResult:
     if old_version == new_version:
         return VersionBumpResult(version_bumped=False)
 
+    hook = None
+    if config.post_version_bump.strip():
+        hook = prepare_hook(config.version_file, config.version_bump_files)
+    elif config.version_bump_files.strip():
+        raise ValueError("version_bump_files requires post_version_bump")
+
     path.write_text(
         replace_version(content, config.version_regex, new_version),
         encoding="utf-8",
     )
-    run_git(["add", str(path)])
+    if hook is None:
+        run_git(["add", str(path)])
+    else:
+        run_hook(
+            hook,
+            config.post_version_bump,
+            version_before=old_version,
+            version_after=new_version,
+            bump=bump,
+            version_regex=config.version_regex,
+        )
+        run_git(["--literal-pathspecs", "add", "--", *hook.files])
     run_git(
         [
             "commit",

@@ -144,6 +144,8 @@ The action also exposes outputs on the step that runs it via `steps.<id>.outputs
 | `major_patterns` | no | `""` | Newline-separated regular expressions that trigger a major version bump. |
 | `minor_patterns` | no | `""` | Newline-separated regular expressions that trigger a minor version bump. |
 | `patch_patterns` | no | `""` | Newline-separated regular expressions that trigger a patch version bump. |
+| `post_version_bump` | no | `""` | Optional Bash script executed after an automatic version bump and before its commit. |
+| `version_bump_files` | no | `""` | Newline-separated additional repository-relative files allowed in the version bump commit. Requires a hook. |
 | `git_cliff_offline` | no | `"true"` | If `true`, runs `git-cliff` in offline mode and skips remote metadata lookups. |
 | `commit_unreleased_changelog` | no | `"false"` | If `true`, commits and pushes an updated unreleased changelog on non-release runs. Generation is unaffected. |
 | `trigger_release_workflows` | no | `"false"` | On Gitea hosts supporting the trigger_workflows release API option, if `true`, adds `"trigger_workflows": true` to the release API payload. The input has no effect on GitHub. |
@@ -195,6 +197,38 @@ with:
 ```
 
 If the regex does not match, the action fails instead of guessing.
+
+### Post-version-bump hook
+
+A hook can synchronize derived version files after the action updates the authoritative version file, before creating the version commit. It runs only for an actual automatic bump, not for manual version changes or unreleased changelog generation. Existing workflows without either input keep their previous behavior.
+
+For Cargo (install the required toolchain in the calling workflow):
+
+```yaml
+with:
+  version_file: Cargo.toml
+  version_regex: '^version\\s*=\\s*"([^"]+)"'
+  post_version_bump: |
+    cargo update --workspace
+  version_bump_files: |
+    Cargo.lock
+```
+
+For npm:
+
+```yaml
+with:
+  version_file: package.json
+  version_regex: '"version"\\s*:\\s*"([^"]+)"'
+  post_version_bump: |
+    npm version "$VERSION_AFTER" --allow-same-version --no-git-tag-version --ignore-scripts
+  version_bump_files: |
+    package-lock.json
+```
+
+The hook runs from the repository root using Bash with errexit and pipefail. It receives `VERSION_BEFORE`, `VERSION_AFTER`, `VERSION_BUMP` (major, minor or patch), and `VERSION_FILE` (repository-relative path). The subprocess environment forwards only PATH, HOME, TMPDIR, LANG, LC_ALL, CARGO_HOME, RUSTUP_HOME and RUSTUP_TOOLCHAIN when set, plus the version context. It does not inherit release tokens or arbitrary workflow environment variables. Hooks are trusted workflow code, not sandboxed; HOME and repository credentials may still be accessible.
+
+The hook requires a clean worktree and index before the bump. Additional paths must be literal repository-relative regular files (no symlinks or parent traversal); new files are supported if declared. Only the authoritative version file and declared files may change (ignored files are not checked). The hook must not stage changes, change HEAD or switch branches. The action checks these conditions and the authoritative version before staging the files together and committing. A nonzero exit or validation failure stops release processing; local changes are not automatically rolled back. The action never automatically installs hook toolchains.
 
 ### Pre-releases and version suffixes
 

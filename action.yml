@@ -55,6 +55,16 @@ inputs:
       If empty, no patch version bumps will be detected.
     required: false
     default: ""
+  post_version_bump:
+    description: >-
+      Optional Bash script executed after an automatic version bump and before its commit.
+    required: false
+    default: ""
+  version_bump_files:
+    description: >-
+      Newline-separated additional repository-relative files to include in the version bump commit.
+    required: false
+    default: ""
   git_cliff_offline:
     description: "Run git-cliff without fetching remote metadata."
     required: false
@@ -105,6 +115,8 @@ runs:
         MAJOR_PATTERNS: ${{ inputs.major_patterns }}
         MINOR_PATTERNS: ${{ inputs.minor_patterns }}
         PATCH_PATTERNS: ${{ inputs.patch_patterns }}
+        POST_VERSION_BUMP: ${{ inputs.post_version_bump }}
+        VERSION_BUMP_FILES: ${{ inputs.version_bump_files }}
         GIT_CLIFF_OFFLINE: ${{ inputs.git_cliff_offline }}
         COMMIT_UNRELEASED_CHANGELOG: ${{ inputs.commit_unreleased_changelog }}
         RANGE: ${{ github.event.before }}..${{ inputs.github_sha_override || github.sha || '' }}
