@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -98,10 +99,10 @@ def run_hook(
         VERSION_FILE=context.files[0],
     )
     result = run_command(
-        ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-s"],
+        ["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c", script],
         cwd=context.root,
         env=env,
-        input_text=script,
+        stdin=subprocess.DEVNULL,
     )
     if result.stdout:
         print(result.stdout, end="")

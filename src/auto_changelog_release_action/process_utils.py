@@ -44,6 +44,7 @@ def run_command(
     cwd: Path | None = None,
     env: Mapping[str, str] | None = None,
     input_text: str | None = None,
+    stdin: int | None = None,
     check: bool = True,
     merge_stderr: bool = False,
 ) -> subprocess.CompletedProcess[str]:
@@ -57,6 +58,7 @@ def run_command(
             cwd=cwd,
             env=dict(env) if env is not None else None,
             input=input_text,
+            stdin=stdin,
             check=check,
             text=True,
             stdout=subprocess.PIPE,

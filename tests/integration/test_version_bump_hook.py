@@ -97,6 +97,21 @@ def test_invalid_hook_never_creates_version_commit(bump_repo: LocalGitRepo, scri
     assert bump_repo.run("tag") == ""
 
 
+def test_hook_stdin_reader_cannot_consume_following_commands(bump_repo: LocalGitRepo) -> None:
+    script = 'cat >/dev/null\nprintf "%s\\\\n" "$VERSION_AFTER" > project.lock'
+    result = run_version_bump(config(bump_repo, script, "project.lock"))
+    assert result.version_after == "1.2.4"
+    assert bump_repo.run("show", "HEAD:project.lock") == "1.2.4"
+
+
+def test_hook_stdin_reader_cannot_hide_failure(bump_repo: LocalGitRepo) -> None:
+    head = bump_repo.rev_parse("HEAD")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        run_version_bump(config(bump_repo, "cat >/dev/null\\nexit 7"))
+    assert error.value.returncode == 7
+    assert bump_repo.rev_parse("HEAD") == head
+
+
 def test_hook_created_commit_is_rejected(bump_repo: LocalGitRepo) -> None:
     with pytest.raises(RuntimeError):
         run_version_bump(config(bump_repo, "git commit --allow-empty -m unexpected"))
