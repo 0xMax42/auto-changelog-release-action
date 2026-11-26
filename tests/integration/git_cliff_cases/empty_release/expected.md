@@ -8,6 +8,8 @@ Maintenance release. No user-facing changes.
 
 ## [1.0.0] - 2026-01-15
 
+*Quod erat faciendum.*
+
 ### 🚀 Features
 
 - Initial feature - ([423cfdc](https://git.example.invalid/example/changelog-fixture/commit/423cfdcea9f3bc37cd9a7c73306037a4573c0065))

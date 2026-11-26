@@ -16,6 +16,8 @@ Back up the database first.
 
 ## [1.0.0] - 2026-01-15
 
+*Quod erat faciendum.*
+
 ### ⚙️ Miscellaneous Tasks
 
 - Bootstrap - ([6b170b4](https://git.example.invalid/example/changelog-fixture/commit/6b170b4f50bc0c312ff8843df32cb7a80b83fe4c))
