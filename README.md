@@ -207,7 +207,7 @@ For Cargo (install the required toolchain in the calling workflow):
 ```yaml
 with:
   version_file: Cargo.toml
-  version_regex: '^version\\s*=\\s*"([^"]+)"'
+  version_regex: '^version\s*=\s*"([^"]+)"'
   post_version_bump: |
     cargo update --workspace
   version_bump_files: |
@@ -219,7 +219,7 @@ For npm:
 ```yaml
 with:
   version_file: package.json
-  version_regex: '"version"\\s*:\\s*"([^"]+)"'
+  version_regex: '"version"\s*:\s*"([^"]+)"'
   post_version_bump: |
     npm version "$VERSION_AFTER" --allow-same-version --no-git-tag-version --ignore-scripts
   version_bump_files: |
