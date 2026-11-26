@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.20.0](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.9..v1.20.0) - 2026-11-26
+
+### 🚀 Features
+
+- *(changelog)* Mark v1.0.0 with quod erat faciendum (#61) - ([25b1944](https://git.0xmax42.io/actions/auto-changelog-release-action/commit/25b19444addf9eacfc7174718139cdf2c0839d8d))
+
 ## [1.19.9](https://git.0xmax42.io/actions/auto-changelog-release-action/compare/v1.19.8..v1.19.9) - 2026-11-26
 
 ### 📦 Dependencies
