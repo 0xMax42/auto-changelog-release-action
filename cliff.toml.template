@@ -42,8 +42,12 @@ body = """
 {% else %}\
     ## [unreleased]
 {% endif %}\
-{% if version and version == "v1.0.0" %}\
+{% if version and version == "v0.1.0" %}\
+    \n*Ab initio.*
+{% elif version and version == "v1.0.0" %}\
     \n*Quod erat faciendum.*
+{% elif version and version | find_regex(pat="^v[1-9][0-9]*[.]0[.]0$") | length > 0 %}\
+    \n*Mutatis mutandis.*
 {% endif %}\
 {% if version and commits | length == 0 %}\
     \nMaintenance release. No user-facing changes.
